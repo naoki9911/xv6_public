@@ -5,6 +5,9 @@
 #include "mmu.h"
 #include "proc.h"
 #include "x86.h"
+#include "mp_uefi.h"
+#include "debug.h"
+#include "graphic.h"
 
 static void startothers(void);
 static void mpmain(void)  __attribute__((noreturn));
@@ -19,11 +22,12 @@ main(void)
 {
   kinit1(end, P2V(4*1024*1024)); // phys page allocator
   kvmalloc();      // kernel page table
-  mpinit();        // detect other processors
+  mpinit_uefi();
   lapicinit();     // interrupt controller
   seginit();       // segment descriptors
-  picinit();       // disable pic
+  picinit();    // disable pic
   ioapicinit();    // another interrupt controller
+  graphic_init();
   consoleinit();   // console hardware
   uartinit();      // serial port
   pinit();         // process table
@@ -34,6 +38,7 @@ main(void)
   startothers();   // start other processors
   kinit2(P2V(4*1024*1024), P2V(PHYSTOP)); // must come after startothers()
   userinit();      // first user process
+
   mpmain();        // finish this processor's setup
 }
 
@@ -75,9 +80,9 @@ startothers(void)
   memmove(code, _binary_entryother_start, (uint)_binary_entryother_size);
 
   for(c = cpus; c < cpus+ncpu; c++){
-    if(c == mycpu())  // We've started already.
+    if(c == mycpu()){  // We've started already.
       continue;
-
+    }
     // Tell entryother.S what stack to use, where to enter, and what
     // pgdir to use. We cannot use kpgdir yet, because the AP processor
     // is running in low  memory, so we use entrypgdir for the APs too.

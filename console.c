@@ -65,6 +65,7 @@ cprintf(char *fmt, ...)
   if (fmt == 0)
     panic("null fmt");
 
+
   argp = (uint*)(void*)(&fmt + 1);
   for(i = 0; (c = fmt[i] & 0xff) != 0; i++){
     if(c != '%'){
@@ -126,7 +127,7 @@ panic(char *s)
 //PAGEBREAK: 50
 #define BACKSPACE 0x100
 #define CRTPORT 0x3d4
-static ushort *crt = (ushort*)P2V(0xb8000);  // CGA memory
+/*static ushort *crt = (ushort*)P2V(0xb8000);  // CGA memory
 
 static void
 cgaputc(int c)
@@ -160,7 +161,7 @@ cgaputc(int c)
   outb(CRTPORT, 15);
   outb(CRTPORT+1, pos);
   crt[pos] = ' ' | 0x0700;
-}
+}*/
 
 void
 consputc(int c)
@@ -175,7 +176,7 @@ consputc(int c)
     uartputc('\b'); uartputc(' '); uartputc('\b');
   } else
     uartputc(c);
-  cgaputc(c);
+  //cgaputc(c);
 }
 
 #define INPUT_BUF 128
@@ -288,12 +289,13 @@ consolewrite(struct inode *ip, char *buf, int n)
 void
 consoleinit(void)
 {
+  panicked = 0;
   initlock(&cons.lock, "console");
 
   devsw[CONSOLE].write = consolewrite;
   devsw[CONSOLE].read = consoleread;
   cons.locking = 1;
 
-  ioapicenable(IRQ_KBD, 0);
+  //ioapicenable(IRQ_KBD, 0);
 }
 
