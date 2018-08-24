@@ -8,6 +8,7 @@
 #include "mp_uefi.h"
 #include "debug.h"
 #include "graphic.h"
+#include "font.h"
 
 static void startothers(void);
 static void mpmain(void)  __attribute__((noreturn));
@@ -28,6 +29,7 @@ main(void)
   picinit();    // disable pic
   ioapicinit();    // another interrupt controller
   graphic_init();
+  font_hello();
   consoleinit();   // console hardware
   uartinit();      // serial port
   pinit();         // process table

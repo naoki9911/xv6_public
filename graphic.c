@@ -30,7 +30,7 @@ void graphic_draw_box(){
 void graphic_draw_pixel(int x,int y,struct graphic_pixel * buffer){
   int pixel_addr = (sizeof(struct graphic_pixel))*(y*HORIZONTAL_PIXELS + x);
   struct graphic_pixel *pixel = (struct graphic_pixel *)(VRAMBASE_MAPPED + pixel_addr);
-  pixel->blue = 0x00;
-  pixel->green = 0xFF;
-  pixel->red = 0xFF;
+  pixel->blue = buffer->blue;
+  pixel->green = buffer->green;
+  pixel->red = buffer->red;
 }

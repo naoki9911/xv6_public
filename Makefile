@@ -29,6 +29,7 @@ OBJS = \
 	mp_uefi.o\
 	debug.o\
 	graphic.o\
+	font.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
