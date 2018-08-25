@@ -15,6 +15,7 @@
 #include "proc.h"
 #include "x86.h"
 #include "font.h"
+#include "graphic.h"
 
 static void consputc(int);
 
@@ -165,15 +166,24 @@ cgaputc(int c)
 }*/
 
 
-int console_pos = 0;
-#define CONSOLE_HORIZONTAL_MAX 52
+#define CONSOLE_HORIZONTAL_MAX 53
 #define CONSOLE_VERTICAL_MAX 20
+int console_pos = CONSOLE_HORIZONTAL_MAX*(CONSOLE_VERTICAL_MAX);
+//int console_pos = 0;
 void graphic_putc(int c){
   if(c == '\n'){
     console_pos += CONSOLE_HORIZONTAL_MAX - console_pos%CONSOLE_HORIZONTAL_MAX;
+    if(console_pos >= CONSOLE_VERTICAL_MAX * CONSOLE_HORIZONTAL_MAX){
+      console_pos -= CONSOLE_HORIZONTAL_MAX;
+      graphic_scroll_up(30);
+    }
   }else if(c == BACKSPACE){
     if(console_pos>0) --console_pos;
   }else{
+    if(console_pos >= CONSOLE_VERTICAL_MAX * CONSOLE_HORIZONTAL_MAX){
+      console_pos -= CONSOLE_HORIZONTAL_MAX;
+      graphic_scroll_up(30);
+    }
     int x = (console_pos%CONSOLE_HORIZONTAL_MAX)*FONT_WIDTH + 2;
     int y = (console_pos/CONSOLE_HORIZONTAL_MAX)*FONT_HEIGHT;
     font_render(x,y,c);

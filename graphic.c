@@ -1,7 +1,7 @@
 #include "graphic.h"
 #include "mp_uefi.h"
 #include "memlayout.h"
-
+#include "defs.h"
 /*
  * i%4 = 0 : blue
  * i%4 = 1 : green
@@ -28,7 +28,7 @@ void graphic_draw_box(){
 }
 
 void graphic_draw_pixel(int x,int y,struct graphic_pixel * buffer){
-  int pixel_addr = (sizeof(struct graphic_pixel))*(y*HORIZONTAL_PIXELS + x);
+  int pixel_addr = (sizeof(struct graphic_pixel))*(y*PIXELS_PER_LINE + x);
   struct graphic_pixel *pixel = (struct graphic_pixel *)(VRAMBASE_MAPPED + pixel_addr);
   pixel->blue = buffer->blue;
   pixel->green = buffer->green;
@@ -36,5 +36,8 @@ void graphic_draw_pixel(int x,int y,struct graphic_pixel * buffer){
 }
 
 void graphic_scroll_up(int height){
-
+  int addr_diff = (sizeof(struct graphic_pixel))*PIXELS_PER_LINE*height;
+  memmove((unsigned int *)VRAMBASE_MAPPED,(unsigned int *)(VRAMBASE_MAPPED + addr_diff),VRAMSIZE - addr_diff);
+  memset((unsigned int *)(VRAMBASE_MAPPED + VRAMSIZE - addr_diff),0,addr_diff);
 }
+
