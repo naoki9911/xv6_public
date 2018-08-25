@@ -21,6 +21,7 @@ extern char end[]; // first address after kernel loaded from ELF file
 int
 main(void)
 {
+  graphic_init();
   kinit1(end, P2V(4*1024*1024)); // phys page allocator
   kvmalloc();      // kernel page table
   mpinit_uefi();
@@ -28,7 +29,6 @@ main(void)
   seginit();       // segment descriptors
   picinit();    // disable pic
   ioapicinit();    // another interrupt controller
-  graphic_init();
   consoleinit();   // console hardware
   uartinit();      // serial port
   pinit();         // process table

@@ -12,6 +12,7 @@ struct graphic_config {
 };
 
 struct gpu {
+  uint pvram_addr;
   uint vvram_addr;
   uint vram_size;
   uint horizontal_resolution;
@@ -30,6 +31,7 @@ void graphic_draw_box();
 void graphic_draw_pixel(int x,int y,struct graphic_pixel *);
 void graphic_scroll_up(int height);
 
+struct gpu gpu;
 #define VRAMBASE 0x80000000
 #define VRAMSIZE 0x1D5000
 #define VRAMBASE_MAPPED (DEVSPACE-VRAMSIZE)

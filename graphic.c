@@ -8,9 +8,9 @@
  * i%4 = 2 : red
  * i%4 = 3 : black
  */
-struct gpu gpu;
 void graphic_init(){
   struct boot_param *boot_param = (struct boot_param *)P2V_WO(BOOTPARAM);
+  gpu.pvram_addr = boot_param->graphic_config.frame_base;
   gpu.vram_size = boot_param->graphic_config.frame_size;
   gpu.vvram_addr = DEVSPACE - gpu.vram_size;
   gpu.horizontal_resolution = (uint)(boot_param->graphic_config.horizontal_resolution & 0xFFFFFFFF);
