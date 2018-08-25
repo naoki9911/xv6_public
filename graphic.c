@@ -34,3 +34,7 @@ void graphic_draw_pixel(int x,int y,struct graphic_pixel * buffer){
   pixel->green = buffer->green;
   pixel->red = buffer->red;
 }
+
+void graphic_scroll_up(int height){
+
+}

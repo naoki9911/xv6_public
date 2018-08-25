@@ -29,9 +29,6 @@ main(void)
   picinit();    // disable pic
   ioapicinit();    // another interrupt controller
   graphic_init();
-  font_render_string("Hello World",0);
-  font_render_string("Hello XV6_UEFI",1);
-  font_render_string("@PiBVT",2);
   consoleinit();   // console hardware
   uartinit();      // serial port
   pinit();         // process table

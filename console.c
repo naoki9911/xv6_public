@@ -14,6 +14,7 @@
 #include "mmu.h"
 #include "proc.h"
 #include "x86.h"
+#include "font.h"
 
 static void consputc(int);
 
@@ -163,6 +164,24 @@ cgaputc(int c)
   crt[pos] = ' ' | 0x0700;
 }*/
 
+
+int console_pos = 0;
+#define CONSOLE_HORIZONTAL_MAX 52
+#define CONSOLE_VERTICAL_MAX 20
+void graphic_putc(int c){
+  if(c == '\n'){
+    console_pos += CONSOLE_HORIZONTAL_MAX - console_pos%CONSOLE_HORIZONTAL_MAX;
+  }else if(c == BACKSPACE){
+    if(console_pos>0) --console_pos;
+  }else{
+    int x = (console_pos%CONSOLE_HORIZONTAL_MAX)*FONT_WIDTH + 2;
+    int y = (console_pos/CONSOLE_HORIZONTAL_MAX)*FONT_HEIGHT;
+    font_render(x,y,c);
+    console_pos++;
+  }
+}
+
+
 void
 consputc(int c)
 {
@@ -174,9 +193,10 @@ consputc(int c)
 
   if(c == BACKSPACE){
     uartputc('\b'); uartputc(' '); uartputc('\b');
-  } else
+  } else {
     uartputc(c);
-  //cgaputc(c);
+  }
+  graphic_putc(c);
 }
 
 #define INPUT_BUF 128
@@ -294,6 +314,11 @@ consoleinit(void)
 
   devsw[CONSOLE].write = consolewrite;
   devsw[CONSOLE].read = consoleread;
+  
+  char *p;
+  for(p="Starting XV6_UEFI...\n"; *p; p++)
+    graphic_putc(*p);
+  
   cons.locking = 1;
 
   //ioapicenable(IRQ_KBD, 0);
