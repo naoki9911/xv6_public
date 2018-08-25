@@ -165,6 +165,7 @@ cgaputc(int c)
   crt[pos] = ' ' | 0x0700;
 }*/
 
+extern struct gpu gpu;
 
 #define CONSOLE_HORIZONTAL_MAX 53
 #define CONSOLE_VERTICAL_MAX 20

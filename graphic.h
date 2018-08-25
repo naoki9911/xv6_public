@@ -32,11 +32,5 @@ void graphic_draw_pixel(int x,int y,struct graphic_pixel *);
 void graphic_scroll_up(int height);
 
 struct gpu gpu;
-#define VRAMBASE 0x80000000
-#define VRAMSIZE 0x1D5000
-#define VRAMBASE_MAPPED (DEVSPACE-VRAMSIZE)
-#define HORIZONTAL_PIXELS 800
-#define VERTICAL_PIXELS 600
-#define PIXELS_PER_LINE 800
 
 #endif
