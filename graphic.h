@@ -8,9 +8,16 @@ struct graphic_config {
   long long frame_size;
   long long horizontal_resolution;
   long long vertical_resolution;
-  long long pixels_per_scan_line;
+  long long pixels_per_line;
 };
 
+struct gpu {
+  uint vvram_addr;
+  uint vram_size;
+  uint horizontal_resolution;
+  uint vertical_resolution;
+  uint pixels_per_line;
+};
 struct graphic_pixel {
   uchar blue;
   uchar green;

@@ -17,17 +17,12 @@ void mpinit_uefi(void)
   struct uefi_madt *madt = (struct uefi_madt*)(P2V_WO(boot_param->madt_addr));
 
   uint i=0x2C;
-//  uint debug;
   struct uefi_lapic *lapic_entry;
   struct uefi_ioapic *ioapic;
   struct uefi_iso *iso;
   struct uefi_non_maskable_intr *non_mask_intr; 
   
   lapic = (uint *)(madt->lapic_addr);
-/*  asm("xor %%eax,%%eax \n\t"
-      "movl %0,%%eax \n\t"
-      "hlt \n\t"
-      : : "m"(debug)); */
   ncpu = 0;
 
   while(i<madt->len){

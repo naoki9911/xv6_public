@@ -5,9 +5,9 @@
 log                 0xc4              log.o
 kmem                0x3c              kalloc.o
 ioapicid            0x1               mp_uefi.o
+gpu                 0x14              graphic.o
 ioapic              0x4               ioapic.o
 bcache              0x4958            bio.o
-graphic_conf        0x28              graphic.o
 input               0x8c              console.o
 stack               0x1000            entry.o
 kpgdir              0x4               vm.o
@@ -18,7 +18,6 @@ sb                  0x1c              fs.o
 lapic               0x4               lapic.o
 idt                 0x800             trap.o
 ncpu                0x4               mp_uefi.o
-frame               0x4               graphic.o
 ticks               0x4               trap.o
 ptable              0x1f34            proc.o
 devsw               0x50              file.o
@@ -106,7 +105,7 @@ icache              0x1c54            fs.o
  .eh_frame      0x0000000000000000       0x68 debug.o
  .note.GNU-stack
                 0x0000000000000000        0x0 graphic.o
- .eh_frame      0x0000000000000000       0x88 graphic.o
+ .eh_frame      0x0000000000000000       0x70 graphic.o
  .note.GNU-stack
                 0x0000000000000000        0x0 font.o
  .eh_frame      0x0000000000000000       0x70 font.o
@@ -120,7 +119,7 @@ icache              0x1c54            fs.o
 
                 0x0000000080100000                . = 0x80100000
 
-.text           0x0000000080100000     0x7050 ロードアドレス 0x0000000000100000
+.text           0x0000000080100000     0x7070 ロードアドレス 0x0000000000100000
  *(.text .stub .text.* .gnu.linkonce.t.*)
  .text          0x0000000080100000       0x65 entry.o
                 0x0000000080100000                multiboot_header
@@ -592,117 +591,116 @@ icache              0x1c54            fs.o
                 0x0000000080106de0                uart_debug
                 0x0000000080106e70                uart_debugs
  *fill*         0x0000000080106ea3        0xd 
- .text          0x0000000080106eb0       0xa2 graphic.o
+ .text          0x0000000080106eb0       0xcd graphic.o
                 0x0000000080106eb0                graphic_init
-                0x0000000080106ec0                graphic_draw_box
-                0x0000000080106ed0                graphic_draw_pixel
-                0x0000000080106f10                graphic_scroll_up
- *fill*         0x0000000080106f52        0xe 
- .text          0x0000000080106f60       0xf0 font.o
-                0x0000000080106f60                font_render
-                0x0000000080107000                font_render_string
+                0x0000000080106ef0                graphic_draw_pixel
+                0x0000000080106f30                graphic_scroll_up
+ *fill*         0x0000000080106f7d        0x3 
+ .text          0x0000000080106f80       0xf0 font.o
+                0x0000000080106f80                font_render
+                0x0000000080107020                font_render_string
                 [!provide]                        PROVIDE (etext = .)
 
-.iplt           0x0000000080107050        0x0 ロードアドレス 0x0000000000107050
- .iplt          0x0000000080107050        0x0 font.o
+.iplt           0x0000000080107070        0x0 ロードアドレス 0x0000000000107070
+ .iplt          0x0000000080107070        0x0 font.o
 
-.rodata         0x0000000080107060     0x2024 ロードアドレス 0x0000000000107060
+.rodata         0x0000000080107080     0x2024 ロードアドレス 0x0000000000107080
  *(.rodata .rodata.* .gnu.linkonce.r.*)
  .rodata.str1.1
-                0x0000000080107060       0x2d bio.o
+                0x0000000080107080       0x2d bio.o
  .rodata.str1.1
-                0x000000008010708d       0x46 console.o
+                0x00000000801070ad       0x46 console.o
                                          0x48 (緩和前のサイズ)
- *fill*         0x00000000801070d3        0x1 
- .rodata        0x00000000801070d4       0x11 console.o
+ *fill*         0x00000000801070f3        0x1 
+ .rodata        0x00000000801070f4       0x11 console.o
  .rodata.str1.1
-                0x00000000801070e5        0xc exec.o
+                0x0000000080107105        0xc exec.o
  .rodata.str1.1
-                0x00000000801070f1       0x32 file.o
+                0x0000000080107111       0x32 file.o
                                          0x3c (緩和前のサイズ)
  .rodata.str1.1
-                0x0000000080107123       0xb6 fs.o
+                0x0000000080107143       0xb6 fs.o
                                          0xbe (緩和前のサイズ)
- *fill*         0x00000000801071d9        0x3 
+ *fill*         0x00000000801071f9        0x3 
  .rodata.str1.4
-                0x00000000801071dc       0x53 fs.o
+                0x00000000801071fc       0x53 fs.o
  .rodata.str1.1
-                0x000000008010722f       0x82 ide.o
- *fill*         0x00000000801072b1        0x3 
+                0x000000008010724f       0x82 ide.o
+ *fill*         0x00000000801072d1        0x3 
  .rodata.str1.4
-                0x00000000801072b4       0x32 ioapic.o
+                0x00000000801072d4       0x32 ioapic.o
  .rodata.str1.1
-                0x00000000801072e6        0xb kalloc.o
- *fill*         0x00000000801072f1        0xf 
- .rodata        0x0000000080107300      0x220 kbd.o
+                0x0000000080107306        0xb kalloc.o
+ *fill*         0x0000000080107311        0xf 
+ .rodata        0x0000000080107320      0x220 kbd.o
  .rodata.str1.1
-                0x0000000080107520       0x44 log.o
+                0x0000000080107540       0x44 log.o
  .rodata.str1.1
-                0x0000000080107564       0x14 main.o
+                0x0000000080107584       0x14 main.o
  .rodata.str1.1
-                0x0000000080107578        0x5 pipe.o
+                0x0000000080107598        0x5 pipe.o
  .rodata.str1.1
-                0x000000008010757d       0xe2 proc.o
+                0x000000008010759d       0xe2 proc.o
                                          0xe8 (緩和前のサイズ)
- *fill*         0x000000008010765f        0x1 
+ *fill*         0x000000008010767f        0x1 
  .rodata.str1.4
-                0x0000000080107660       0x26 proc.o
- *fill*         0x0000000080107686        0x2 
- .rodata        0x0000000080107688       0x18 proc.o
+                0x0000000080107680       0x26 proc.o
+ *fill*         0x00000000801076a6        0x2 
+ .rodata        0x00000000801076a8       0x18 proc.o
  .rodata.str1.1
-                0x00000000801076a0        0xb sleeplock.o
+                0x00000000801076c0        0xb sleeplock.o
  .rodata.str1.1
-                0x00000000801076ab       0x2e spinlock.o
+                0x00000000801076cb       0x2e spinlock.o
  .rodata.str1.1
-                0x00000000801076d9       0x1c syscall.o
- *fill*         0x00000000801076f5        0xb 
- .rodata        0x0000000080107700       0x58 syscall.o
+                0x00000000801076f9       0x1c syscall.o
+ *fill*         0x0000000080107715        0xb 
+ .rodata        0x0000000080107720       0x58 syscall.o
  .rodata.str1.1
-                0x0000000080107758       0x61 sysfile.o
+                0x0000000080107778       0x61 sysfile.o
                                          0x63 (緩和前のサイズ)
  .rodata.str1.1
-                0x00000000801077b9        0xa trap.o
- *fill*         0x00000000801077c3        0x1 
+                0x00000000801077d9        0xa trap.o
+ *fill*         0x00000000801077e3        0x1 
  .rodata.str1.4
-                0x00000000801077c4       0x9b trap.o
- *fill*         0x000000008010785f        0x1 
- .rodata        0x0000000080107860       0x80 trap.o
+                0x00000000801077e4       0x9b trap.o
+ *fill*         0x000000008010787f        0x1 
+ .rodata        0x0000000080107880       0x80 trap.o
  .rodata.str1.1
-                0x00000000801078e0        0x8 uart.o
+                0x0000000080107900        0x8 uart.o
  .rodata.str1.1
-                0x00000000801078e8      0x100 vm.o
+                0x0000000080107908      0x100 vm.o
                                         0x106 (緩和前のサイズ)
  .rodata.str1.4
-                0x00000000801079e8       0x24 vm.o
+                0x0000000080107a08       0x24 vm.o
                                          0x23 (緩和前のサイズ)
- .rodata        0x0000000080107a0c       0x18 mp_uefi.o
- *fill*         0x0000000080107a24       0x1c 
- .rodata        0x0000000080107a40     0x1644 font.o
+ .rodata        0x0000000080107a2c       0x18 mp_uefi.o
+ *fill*         0x0000000080107a44       0x1c 
+ .rodata        0x0000000080107a60     0x1644 font.o
 
 .note.gnu.property
-                0x0000000080109084       0x1c ロードアドレス 0x0000000000109084
+                0x00000000801090a4       0x1c ロードアドレス 0x00000000001090a4
  .note.gnu.property
-                0x0000000080109084       0x1c font.o
+                0x00000000801090a4       0x1c font.o
 
-.rel.dyn        0x00000000801090a0        0x0 ロードアドレス 0x00000000001090a0
- .rel.got       0x00000000801090a0        0x0 font.o
- .rel.iplt      0x00000000801090a0        0x0 font.o
- .rel.text      0x00000000801090a0        0x0 font.o
+.rel.dyn        0x00000000801090c0        0x0 ロードアドレス 0x00000000001090c0
+ .rel.got       0x00000000801090c0        0x0 font.o
+ .rel.iplt      0x00000000801090c0        0x0 font.o
+ .rel.text      0x00000000801090c0        0x0 font.o
  .rel.text.startup
-                0x00000000801090a0        0x0 font.o
- .rel.data      0x00000000801090a0        0x0 font.o
+                0x00000000801090c0        0x0 font.o
+ .rel.data      0x00000000801090c0        0x0 font.o
 
-.stab           0x00000000801090a0        0x1 ロードアドレス 0x00000000001090a0
+.stab           0x00000000801090c0        0x1 ロードアドレス 0x00000000001090c0
                 [!provide]                        PROVIDE (__STAB_BEGIN__ = .)
  *(.stab)
                 [!provide]                        PROVIDE (__STAB_END__ = .)
-                0x00000000801090a0        0x1 BYTE 0x0
+                0x00000000801090c0        0x1 BYTE 0x0
 
-.stabstr        0x00000000801090a1        0x1 ロードアドレス 0x00000000001090a1
+.stabstr        0x00000000801090c1        0x1 ロードアドレス 0x00000000001090c1
                 [!provide]                        PROVIDE (__STABSTR_BEGIN__ = .)
  *(.stabstr)
                 [!provide]                        PROVIDE (__STABSTR_END__ = .)
-                0x00000000801090a1        0x1 BYTE 0x0
+                0x00000000801090c1        0x1 BYTE 0x0
                 0x000000008010a000                . = ALIGN (0x1000)
                 0x000000008010a000                PROVIDE (data = .)
 
@@ -765,7 +763,7 @@ icache              0x1c54            fs.o
 .igot.plt       0x000000008010c52c        0x0 ロードアドレス 0x000000000010c52c
  .igot.plt      0x000000008010c52c        0x0 font.o
 
-.bss            0x000000008010c540     0xad2c ロードアドレス 0x000000000010c540
+.bss            0x000000008010c540     0xacf8 ロードアドレス 0x000000000010c540
  *(.bss)
  .bss           0x000000008010c540        0x0 entry.o
  .bss           0x000000008010c540        0x0 bio.o
@@ -842,11 +840,9 @@ icache              0x1c54            fs.o
                 0x0000000080116f40                ioapicid
                 0x0000000080116f60                cpus
                 0x0000000080117220                ncpu
- *fill*         0x0000000080117224       0x1c 
- COMMON         0x0000000080117240       0x2c graphic.o
-                0x0000000080117240                graphic_conf
-                0x0000000080117268                frame
-                0x000000008011726c                PROVIDE (end = .)
+ COMMON         0x0000000080117224       0x14 graphic.o
+                0x0000000080117224                gpu
+                0x0000000080117238                PROVIDE (end = .)
 
 /DISCARD/
  *(.eh_frame .note.GNU-stack)
@@ -887,7 +883,7 @@ LOAD initcode
 LOAD entryother
 OUTPUT(kernel elf32-i386)
 
-.debug_line     0x0000000000000000     0x67f9
+.debug_line     0x0000000000000000     0x682e
  .debug_line    0x0000000000000000       0x50 entry.o
  .debug_line    0x0000000000000050      0x24c bio.o
  .debug_line    0x000000000000029c      0x84a console.o
@@ -918,10 +914,10 @@ OUTPUT(kernel elf32-i386)
  .debug_line    0x0000000000005c7a      0x717 vm.o
  .debug_line    0x0000000000006391      0x119 mp_uefi.o
  .debug_line    0x00000000000064aa      0x17e debug.o
- .debug_line    0x0000000000006628       0xe8 graphic.o
- .debug_line    0x0000000000006710       0xe9 font.o
+ .debug_line    0x0000000000006628      0x11d graphic.o
+ .debug_line    0x0000000000006745       0xe9 font.o
 
-.debug_info     0x0000000000000000    0x12ffb
+.debug_info     0x0000000000000000    0x13166
  .debug_info    0x0000000000000000       0x26 entry.o
  .debug_info    0x0000000000000026      0x473 bio.o
  .debug_info    0x0000000000000499     0x12e8 console.o
@@ -952,10 +948,10 @@ OUTPUT(kernel elf32-i386)
  .debug_info    0x000000000000fece     0x1575 vm.o
  .debug_info    0x0000000000011443      0xbb2 mp_uefi.o
  .debug_info    0x0000000000011ff5      0xbb1 debug.o
- .debug_info    0x0000000000012ba6      0x265 graphic.o
- .debug_info    0x0000000000012e0b      0x1f0 font.o
+ .debug_info    0x0000000000012ba6      0x3d0 graphic.o
+ .debug_info    0x0000000000012f76      0x1f0 font.o
 
-.debug_abbrev   0x0000000000000000     0x43d3
+.debug_abbrev   0x0000000000000000     0x4409
  .debug_abbrev  0x0000000000000000       0x14 entry.o
  .debug_abbrev  0x0000000000000014      0x21e bio.o
  .debug_abbrev  0x0000000000000232      0x4aa console.o
@@ -986,8 +982,8 @@ OUTPUT(kernel elf32-i386)
  .debug_abbrev  0x000000000000390f      0x47a vm.o
  .debug_abbrev  0x0000000000003d89      0x188 mp_uefi.o
  .debug_abbrev  0x0000000000003f11      0x25d debug.o
- .debug_abbrev  0x000000000000416e      0x133 graphic.o
- .debug_abbrev  0x00000000000042a1      0x132 font.o
+ .debug_abbrev  0x000000000000416e      0x169 graphic.o
+ .debug_abbrev  0x00000000000042d7      0x132 font.o
 
 .debug_aranges  0x0000000000000000      0x408
  .debug_aranges
@@ -1055,7 +1051,7 @@ OUTPUT(kernel elf32-i386)
  .debug_aranges
                 0x00000000000003e8       0x20 font.o
 
-.debug_str      0x0000000000000000     0x10f2
+.debug_str      0x0000000000000000     0x10e4
  .debug_str     0x0000000000000000       0x31 entry.o
  .debug_str     0x0000000000000031      0x19a bio.o
                                         0x1f2 (緩和前のサイズ)
@@ -1111,16 +1107,16 @@ OUTPUT(kernel elf32-i386)
                                          0x33 (緩和前のサイズ)
  .debug_str     0x0000000000000daf       0x6b vm.o
                                         0x419 (緩和前のサイズ)
- .debug_str     0x0000000000000e1a      0x201 mp_uefi.o
-                                        0x515 (緩和前のサイズ)
- .debug_str     0x000000000000101b       0x1f debug.o
+ .debug_str     0x0000000000000e1a      0x1fc mp_uefi.o
+                                        0x510 (緩和前のサイズ)
+ .debug_str     0x0000000000001016       0x1f debug.o
                                         0x378 (緩和前のサイズ)
- .debug_str     0x000000000000103a       0x7d graphic.o
-                                        0x253 (緩和前のサイズ)
- .debug_str     0x00000000000010b7       0x3b font.o
+ .debug_str     0x0000000000001035       0x74 graphic.o
+                                        0x2e1 (緩和前のサイズ)
+ .debug_str     0x00000000000010a9       0x3b font.o
                                         0x17a (緩和前のサイズ)
 
-.debug_loc      0x0000000000000000     0x6624
+.debug_loc      0x0000000000000000     0x6613
  .debug_loc     0x0000000000000000      0x126 bio.o
  .debug_loc     0x0000000000000126      0xa3f console.o
  .debug_loc     0x0000000000000b65      0x2ef exec.o
@@ -1147,8 +1143,8 @@ OUTPUT(kernel elf32-i386)
  .debug_loc     0x00000000000055b9      0xc26 vm.o
  .debug_loc     0x00000000000061df       0xe2 mp_uefi.o
  .debug_loc     0x00000000000062c1      0x1de debug.o
- .debug_loc     0x000000000000649f       0x60 graphic.o
- .debug_loc     0x00000000000064ff      0x125 font.o
+ .debug_loc     0x000000000000649f       0x4f graphic.o
+ .debug_loc     0x00000000000064ee      0x125 font.o
 
 .debug_ranges   0x0000000000000000      0xdf8
  .debug_ranges  0x0000000000000000       0x18 bio.o
