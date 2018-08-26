@@ -30,6 +30,7 @@ OBJS = \
 	debug.o\
 	graphic.o\
 	font.o\
+	pci.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf
