@@ -9,7 +9,7 @@ struct pci_dev {
 };
 
 void pci_write_config(uint config);
-void pci_read_config(uint *config);
+uint pci_read_config();
 void pci_access_config(uint bus_num,uint device_num,uint function_num,uint reg_addr,uint *data);
 void pci_init();
 void pci_init_device(uint bus_num,uint device_num,uint function_num);
