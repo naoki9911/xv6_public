@@ -31,8 +31,8 @@ main(void)
   picinit();    // disable pic
   ioapicinit();    // another interrupt controller
   consoleinit();   // console hardware
-  pci_init();
   uartinit();      // serial port
+  pci_init();
   pinit();         // process table
   tvinit();        // trap vectors
   binit();         // buffer cache
