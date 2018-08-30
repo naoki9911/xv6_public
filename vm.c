@@ -115,6 +115,7 @@ static struct kmap {
  { (void*)KERNLINK, V2P(KERNLINK), V2P(data), 0},     // kern text+rodata
  { (void*)data,     V2P(data),     PHYSTOP,   PTE_W}, // kern data+memory
  { 0,0,0,0},
+ { (void*)(PCI_BAR_BASE + PCI_VP_OFFSET),PCI_BAR_BASE,0x10000000+PCI_BAR_BASE,PTE_W},
  { (void*)DEVSPACE, DEVSPACE, 0, PTE_W}, // more devices
 };
 

@@ -9,6 +9,9 @@
 #define KERNBASE 0x80000000         // First kernel virtual address
 #define KERNLINK (KERNBASE+EXTMEM)  // Address where kernel is linked
 
+#define PCI_BAR_BASE 0x80000000
+#define PCI_VP_OFFSET 0x40000000
+#define PCI_P2V(a) (((uint)(a)) + PCI_VP_OFFSET)
 #define V2P(a) (((uint) (a)) - KERNBASE)
 #define P2V(a) (((void *) (a)) + KERNBASE)
 
