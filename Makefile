@@ -32,6 +32,7 @@ OBJS = \
 	font.o\
 	pci.o\
 	i8254.o\
+	arp.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf

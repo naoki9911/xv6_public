@@ -3,6 +3,7 @@
 #include "defs.h"
 #include "memlayout.h"
 #include "defs.h"
+#include "arp.h"
 
 uint base_addr;
 uchar mac_addr[6] = {0};
@@ -10,7 +11,9 @@ void i8254_init(struct pci_dev *dev){
   uint cmd_reg;
   //Enable Bus Master and Disable Interrupts
   pci_access_config(dev->bus_num,dev->device_num,dev->function_num,0x04,&cmd_reg);
+  cprintf("PCI_CMD_READ:%x\n",cmd_reg);
   cmd_reg = cmd_reg | PCI_CMD_BUS_MASTER | PCI_CMD_INTR_DISABLE;
+  cprintf("PCI_CMD_WRITE:%x\n",cmd_reg);
   pci_write_config_register(dev->bus_num,dev->device_num,dev->function_num,0x04,cmd_reg);
   
   base_addr = PCI_P2V(dev->bar0);
@@ -33,6 +36,13 @@ void i8254_init(struct pci_dev *dev){
   cprintf("E1000 General Configuration Done\n");
 
   i8254_init_recv();
+//  i8254_init_send();
+
+  *imc = 0x0;
+  pci_access_config(dev->bus_num,dev->device_num,dev->function_num,0x04,&cmd_reg);
+
+  uint *status = (uint *)(base_addr + 0x8);
+  cprintf("STATUS:%x\n",*status);
 }
 
 void i8254_init_recv(){
@@ -67,7 +77,13 @@ void i8254_init_recv(){
   }
 
   uint *ims = (uint *)(base_addr + 0xD0);
-  *ims = (I8254_IMS_RXT0 | I8254_IMS_RXDMT0 | I8254_IMS_RXSEQ | I8254_IMS_LSC);
+  *ims = (I8254_IMS_RXT0 | I8254_IMS_RXDMT0 | I8254_IMS_RXSEQ | I8254_IMS_LSC | I8254_IMS_RXO);
+
+  uint *rxdctl = (uint *)(base_addr + 0x2828);
+  *rxdctl = 0;
+
+  uint *rctl = (uint *)(base_addr + 0x100);
+  *rctl = (I8254_RCTL_UPE | I8254_RCTL_MPE | I8254_RCTL_BAM | I8254_RCTL_BSIZE | I8254_RCTL_SECRC | I8254_RCTL_BSEX);
 
   uint recv_desc_addr = (uint)kalloc();
   uint *rdbal = (uint *)(base_addr + 0x2800);
@@ -76,7 +92,7 @@ void i8254_init_recv(){
   uint *rdh = (uint *)(base_addr + 0x2810);
   uint *rdt = (uint *)(base_addr + 0x2818);
 
-  *rdbal = recv_desc_addr;
+  *rdbal = V2P(recv_desc_addr);
   *rdbah = 0;
   *rdlen = sizeof(struct i8254_recv_desc)*I8254_RECV_DESC_NUM;
   *rdh = 0;
@@ -84,6 +100,7 @@ void i8254_init_recv(){
 
   struct i8254_recv_desc *recv_desc = (struct i8254_recv_desc *)recv_desc_addr;
   for(int i=0;i<I8254_RECV_DESC_NUM;i++){
+    recv_desc[i].padding = 0;
     recv_desc[i].len = 0;
     recv_desc[i].chk_sum = 0;
     recv_desc[i].status = 0;
@@ -97,16 +114,60 @@ void i8254_init_recv(){
       cprintf("failed to allocate buffer area\n");
       break;
     }
-    recv_desc[i].buf_addr = buf_addr;
-    recv_desc[i+1].buf_addr = buf_addr + 0x800;
-
+    recv_desc[i].buf_addr = V2P(buf_addr);
+    recv_desc[i+1].buf_addr = V2P(buf_addr + 0x800);
   }
 
-  uint *rctl = (uint *)(base_addr + 0x100);
   *rctl |= I8254_RCTL_EN;
   cprintf("E1000 Recieve Initialize Done\n");
 }
 
+void i8254_init_send(){
+  uint *txdctl = (uint *)(base_addr + 0x3828);
+  *txdctl = (I8254_TXDCTL_WTHRESH | I8254_TXDCTL_GRAN_DESC);
+
+  uint tx_desc_addr = (uint)kalloc();
+  uint *tdbal = (uint *)(base_addr + 0x3800);
+  uint *tdbah = (uint *)(base_addr + 0x3804);
+  uint *tdlen = (uint *)(base_addr + 0x3808);
+
+  *tdbal = tx_desc_addr;
+  *tdbah = 0;
+  *tdlen = sizeof(struct i8254_send_desc)*I8254_SEND_DESC_NUM;
+  uint *tdh = (uint *)(base_addr + 0x3810);
+  uint *tdt = (uint *)(base_addr + 0x3818);
+  
+  *tdh = 0;
+  *tdt = 0;
+
+  struct i8254_send_desc *send_desc = (struct i8254_send_desc *)tx_desc_addr;
+  for(int i=0;i<I8254_SEND_DESC_NUM;i++){
+    send_desc[i].padding = 0;
+    send_desc[i].len = 0;
+    send_desc[i].cso = 0;
+    send_desc[i].cmd = 0;
+    send_desc[i].sta = 0;
+    send_desc[i].css = 0;
+    send_desc[i].special = 0;
+  }
+
+  for(int i=0;i<(I8254_SEND_DESC_NUM)/2;i++){
+    uint buf_addr = (uint)kalloc();
+    if(buf_addr == 0){
+      cprintf("failed to allocate buffer area\n");
+      break;
+    }
+    send_desc[i].buf_addr = buf_addr;
+    send_desc[i+1].buf_addr = buf_addr + 0x800;
+  }
+
+  uint *tctl = (uint *)(base_addr + 0x400);
+  *tctl = (I8254_TCTL_EN | I8254_TCTL_PSP | I8254_TCTL_COLD | I8254_TCTL_CT);
+
+  uint *tipg = (uint *)(base_addr + 0x410);
+  *tipg = (10 | (10<<10) | (10<<20));
+
+}
 uint i8254_read_eeprom(uint addr){
   uint *eerd = (uint *)(base_addr + 0x14);
   *eerd = (((addr & 0xFF) << 8) | 1);
@@ -119,4 +180,23 @@ uint i8254_read_eeprom(uint addr){
   }
 
   return (*eerd >> 16) & 0xFFFF;
+}
+
+
+void i8254_recv(){
+  uint *rdh = (uint *)(base_addr + 0x2810);
+  uint *rdt = (uint *)(base_addr + 0x2818);
+//  uint *torl = (uint *)(base_addr + 0x40C0);
+//  uint *tpr = (uint *)(base_addr + 0x40D0);
+  uint *rdbal = (uint *)(base_addr + 0x2800);
+  struct i8254_recv_desc *recv_desc = (struct i8254_recv_desc *)(P2V(*rdbal));
+  for(int i=0;i<20;i++){
+    int rx_available = (I8254_RECV_DESC_NUM - *rdt + *rdh)%I8254_RECV_DESC_NUM;
+    if(rx_available > 0){
+      cprintf("Packet Recieved\n");
+      uint buffer_addr = P2V_WO(recv_desc[*rdt].buf_addr);
+      arp_proc(buffer_addr);
+      *rdt = (*rdt + 1)%I8254_RECV_DESC_NUM;
+    }
+  }
 }
