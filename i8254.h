@@ -7,6 +7,8 @@ void i8254_init_recv();
 void i8254_init_send();
 uint i8254_read_eeprom(uint addr);
 void i8254_recv();
+int i8254_send(const uint pkt_addr,uint len);
+void i8254_intr();
 
 struct i8254_recv_desc {
   uint buf_addr;

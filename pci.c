@@ -36,7 +36,7 @@ uint pci_read_config(){
       "in %%dx,%%eax\n\t"
       "mov %%eax,%0"
       :"=m"(data):);
-  cprintf("");
+  microdelay(200);
   return data;
 }
 
@@ -89,6 +89,8 @@ void pci_init_device(uint bus_num,uint device_num,uint function_num){
   dev.bar1 = data;
   if(device_id == I8254_DEVICE_ID && vendor_id == I8254_VENDOR_ID){
     cprintf("E1000 Ethernet NIC Found\n");
+    pci_access_config(bus_num,device_num,function_num,0xF0,&data);
+    cprintf("Message Control:%x\n",data);
     i8254_init(&dev);
   }
 }

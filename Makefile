@@ -33,6 +33,7 @@ OBJS = \
 	pci.o\
 	i8254.o\
 	arp.o\
+	eth.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf

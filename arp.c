@@ -1,6 +1,8 @@
 #include "pkts_hdr.h"
 #include "defs.h"
 #include "arp.h"
+#include "i8254.h"
+extern uchar mac_addr[6];
 /*
 int arp_proc(unsigned char *recv,size_t recv_size,unsigned char **send,size_t *send_size,struct arp_entry *arp_table){
   struct arp_pkt *arp_p = (struct arp_pkt *)(recv + sizeof(struct eth_pkt));
@@ -20,32 +22,39 @@ int arp_proc(unsigned char *recv,size_t recv_size,unsigned char **send,size_t *s
     return -1;
   }
 }
-
-int arp_broadcast(unsigned char **send,size_t *send_size,uint8_t ip){
-  uint8_t dst_ip[4] = {192,168,1,ip};
-  uint8_t dst_mac_eth[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
-  uint8_t dst_mac_arp[6] = {0,0,0,0,0,0};
+*/
+uint send;
+void arp_init(){
+  send = (uint)kalloc();
+}
+void arp_broadcast(){
+  uchar dst_ip[4] = {192,168,1,2};
+  uchar dst_mac_eth[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
+  uchar dst_mac_arp[6] = {0,0,0,0,0,0};
   
-  *send_size = sizeof(struct eth_pkt) + sizeof(struct arp_pkt);
-  *send = (unsigned char *)malloc(*send_size);
+  uchar send_size = sizeof(struct eth_pkt) + sizeof(struct arp_pkt);
 
-  struct eth_pkt *reply_eth = (struct eth_pkt *)*send;
-  struct arp_pkt *reply_arp = (struct arp_pkt *)(*send + sizeof(struct eth_pkt));
+  struct eth_pkt *reply_eth = (struct eth_pkt *)send;
+  struct arp_pkt *reply_arp = (struct arp_pkt *)(send + sizeof(struct eth_pkt));
   
-  reply_eth->type = 0x0608;
-  memcpy(reply_eth->dst_mac,dst_mac_eth,6);
-  memcpy(reply_eth->src_mac,my_mac,6);
+  reply_eth->type[0] = 0x08;
+  reply_eth->type[1] = 0x06;
+  memmove(reply_eth->dst_mac,dst_mac_eth,6);
+  memmove(reply_eth->src_mac,mac_addr,6);
 
   reply_arp->hrd_type = ARP_HARDWARE_TYPE;
   reply_arp->pro_type = ARP_PROTOCOL_TYPE;
   reply_arp->hrd_len = 6;
   reply_arp->pro_len = 4;
   reply_arp->op = ARP_OPS_REQUEST;
-  memcpy(reply_arp->dst_mac,dst_mac_arp,6);
-  memcpy(reply_arp->dst_ip,dst_ip,4);
-  memcpy(reply_arp->src_mac,my_mac,6);
-  memcpy(reply_arp->src_ip,my_ip,4);
+  memmove(reply_arp->dst_mac,dst_mac_arp,6);
+  memmove(reply_arp->dst_ip,dst_ip,4);
+  memmove(reply_arp->src_mac,mac_addr,6);
+  memmove(reply_arp->src_ip,my_ip,4);
+
+  i8254_send(send,send_size);
 }
+/*
 int arp_reply_pkt_create(struct arp_pkt *arp_recv,unsigned char **send,size_t *send_size){
   *send_size = sizeof(struct eth_pkt) + sizeof(struct arp_pkt);
   *send = (unsigned char *)malloc(*send_size);
@@ -121,9 +130,7 @@ int print_arp_table(struct arp_entry *arp_table){
 */
 
 void arp_proc(uint buffer_addr){
-  struct eth_pkt *eth_pkt = (struct eth_pkt *)buffer_addr;
-  struct arp_pkt *arp_pkt = (struct arp_pkt *)(buffer_addr + sizeof(struct eth_pkt) - 0x2);
-  cprintf("TYPE:%x\n",eth_pkt->type);
+  struct arp_pkt *arp_pkt = (struct arp_pkt *)(buffer_addr);
   print_arp_info(arp_pkt);
 }
 

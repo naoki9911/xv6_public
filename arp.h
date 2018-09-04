@@ -17,6 +17,8 @@ int arp_table_search(struct arp_entry *arp_table,uint8_t *ip);
 int arp_table_initialize(struct arp_entry *arp_table);
 int print_arp_table(struct arp_entry *arp_table);
 */
+void arp_init();
+void arp_broadcast();
 void arp_proc(uint buffer_addr);
 void print_arp_info(struct arp_pkt* arp_p);
 void print_ipv4(uchar *ip);
