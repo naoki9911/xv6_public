@@ -39,19 +39,7 @@ void i8254_init(struct pci_dev *dev){
   cprintf("INTR_ADDR:%x\n",intr_addr);
   i8254_init_recv();
   i8254_init_send();
-  arp_init();
   *imc = 0x0;
-
-  arp_broadcast();
-  pci_access_config(dev->bus_num,dev->device_num,dev->function_num,0x04,&cmd_reg);
-  cprintf("CMD:0x%x\n",cmd_reg);
-
-
-  pci_access_config(dev->bus_num,dev->device_num,dev->function_num,0x3C,&cmd_reg);
-  cprintf("Interrupt Line:%x\n",cmd_reg);
-
-  ioapicenable(0xB,0);
-
 }
 
 void i8254_init_recv(){
@@ -203,15 +191,12 @@ void i8254_recv(){
 //  uint *icr = (uint *)(base_addr + 0xC0);
   uint *rdbal = (uint *)(base_addr + 0x2800);
   struct i8254_recv_desc *recv_desc = (struct i8254_recv_desc *)(P2V(*rdbal));
-  int pkt_cnt = 0;
   while(1){
     int rx_available = (I8254_RECV_DESC_NUM - *rdt + *rdh)%I8254_RECV_DESC_NUM;
     while(rx_available > 0){
-      cprintf("Packet Recieved : %d\n",pkt_cnt);
       uint buffer_addr = P2V_WO(recv_desc[*rdt].buf_addr);
       eth_proc(buffer_addr);
       *rdt = (*rdt + 1)%I8254_RECV_DESC_NUM;
-      pkt_cnt++;
     }
     microdelay(1);
   }
@@ -220,14 +205,11 @@ void i8254_recv(){
 int i8254_send(const uint pkt_addr,uint len){
   uint *tdh = (uint *)(base_addr + 0x3810);
   uint *tdt = (uint *)(base_addr + 0x3818);
-  cprintf("TDH:0x%x TDT:0x%x\n",*tdh,*tdt);
   uint *tdbal = (uint *)(base_addr + 0x3800);
   struct i8254_send_desc *txdesc = (struct i8254_send_desc *)P2V_WO(*tdbal);
   int tx_available = I8254_SEND_DESC_NUM - ((I8254_SEND_DESC_NUM - *tdh + *tdt) % I8254_SEND_DESC_NUM);
   uint index = *tdt%I8254_SEND_DESC_NUM;
-  cprintf("INDEX:%d\n",index);
   if(tx_available > 0) {
-    cprintf("TEST\n");
     memmove(P2V_WO((void *)txdesc[index].buf_addr),(void *)pkt_addr,len);
     txdesc[index].len = len;
     txdesc[index].sta = 0;

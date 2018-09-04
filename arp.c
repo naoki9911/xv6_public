@@ -23,16 +23,25 @@ int arp_proc(unsigned char *recv,size_t recv_size,unsigned char **send,size_t *s
   }
 }
 */
-uint send;
-void arp_init(){
-  send = (uint)kalloc();
+void arp_scan(){
+  uint send_size;
+  for(int i=0;i<256;i++){
+    uint send = (uint)kalloc();
+    arp_broadcast(send,&send_size,i);
+    uint res = i8254_send(send,send_size);
+    while(res == -1){
+      microdelay(1);
+      res = i8254_send(send,send_size);
+    }
+    kfree((char *)send);
+  }
 }
-void arp_broadcast(){
-  uchar dst_ip[4] = {192,168,1,2};
+void arp_broadcast(uint send,uint *send_size,uint ip){
+  uchar dst_ip[4] = {192,168,1,ip};
   uchar dst_mac_eth[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
   uchar dst_mac_arp[6] = {0,0,0,0,0,0};
   
-  uchar send_size = sizeof(struct eth_pkt) + sizeof(struct arp_pkt);
+  *send_size = sizeof(struct eth_pkt) + sizeof(struct arp_pkt);
 
   struct eth_pkt *reply_eth = (struct eth_pkt *)send;
   struct arp_pkt *reply_arp = (struct arp_pkt *)(send + sizeof(struct eth_pkt));
@@ -51,36 +60,8 @@ void arp_broadcast(){
   memmove(reply_arp->dst_ip,dst_ip,4);
   memmove(reply_arp->src_mac,mac_addr,6);
   memmove(reply_arp->src_ip,my_ip,4);
-
-  i8254_send(send,send_size);
 }
 /*
-int arp_reply_pkt_create(struct arp_pkt *arp_recv,unsigned char **send,size_t *send_size){
-  *send_size = sizeof(struct eth_pkt) + sizeof(struct arp_pkt);
-  *send = (unsigned char *)malloc(*send_size);
-  
-  struct eth_pkt *reply_eth = (struct eth_pkt *)*send;
-  struct arp_pkt *reply_arp = (struct arp_pkt *)(*send + sizeof(struct eth_pkt));
-
-  reply_eth->type = ETH_TYPE_ARP;
-  memcpy(reply_eth->dst_mac,arp_recv->src_mac,6);
-  memcpy(reply_eth->src_mac,my_mac,6);
-
-  reply_arp->hrd_type = ARP_HARDWARE_TYPE;
-  reply_arp->pro_type = ARP_PROTOCOL_TYPE;
-  reply_arp->hrd_len = 6;
-  reply_arp->pro_len = 4;
-  reply_arp->op = ARP_OPS_REPLY;
-  memcpy(reply_arp->dst_mac,arp_recv->src_mac,6);
-  memcpy(reply_arp->dst_ip,arp_recv->src_ip,4);
-  memcpy(reply_arp->src_mac,my_mac,6);
-  memcpy(reply_arp->src_ip,my_ip,4);
-  
-  printf("ARP Reply Packet:\n");
-  print_arp_info(reply_arp);
-
-  return 0;
-}
 
 
 int arp_table_update(struct arp_entry *arp_table,struct arp_pkt *recv_arp){
@@ -129,9 +110,49 @@ int print_arp_table(struct arp_entry *arp_table){
 }
 */
 
-void arp_proc(uint buffer_addr){
-  struct arp_pkt *arp_pkt = (struct arp_pkt *)(buffer_addr);
-  print_arp_info(arp_pkt);
+int arp_proc(uint buffer_addr){
+  struct arp_pkt *arp_p = (struct arp_pkt *)(buffer_addr);
+  if(arp_p->hrd_type != ARP_HARDWARE_TYPE) return -1;
+  if(arp_p->pro_type != ARP_PROTOCOL_TYPE) return -1;
+  if(arp_p->hrd_len != 6) return -1;
+  if(arp_p->pro_len != 4) return -1;
+  if(memcmp(my_ip,arp_p->dst_ip,4) != 0 && memcmp(my_ip,arp_p->src_ip,4) != 0) return -1;
+  if(arp_p->op == ARP_OPS_REQUEST && memcmp(my_ip,arp_p->dst_ip,4) == 0){
+    uint send = (uint)kalloc();
+    uint send_size=0;
+    arp_reply_pkt_create(arp_p,send,&send_size);
+    i8254_send(send,send_size);
+    kfree((char *)send);
+    cprintf("ARP REPLY\n");
+    return ARP_CREATED_REPLY;
+  }else if(arp_p->op == ARP_OPS_REPLY && memcmp(my_ip,arp_p->dst_ip,4) == 0){
+  //  arp_table_update(arp_table,arp_p);
+    return ARP_UPDATED_TABLE;
+  }else{
+    return -1;
+  }
+}
+
+void arp_reply_pkt_create(struct arp_pkt *arp_recv,uint send,uint *send_size){
+  *send_size = sizeof(struct eth_pkt) + sizeof(struct arp_pkt);
+  
+  struct eth_pkt *reply_eth = (struct eth_pkt *)send;
+  struct arp_pkt *reply_arp = (struct arp_pkt *)(send + sizeof(struct eth_pkt));
+
+  reply_eth->type[0] = 0x08;
+  reply_eth->type[1] = 0x06;
+  memmove(reply_eth->dst_mac,arp_recv->src_mac,6);
+  memmove(reply_eth->src_mac,mac_addr,6);
+
+  reply_arp->hrd_type = ARP_HARDWARE_TYPE;
+  reply_arp->pro_type = ARP_PROTOCOL_TYPE;
+  reply_arp->hrd_len = 6;
+  reply_arp->pro_len = 4;
+  reply_arp->op = ARP_OPS_REPLY;
+  memmove(reply_arp->dst_mac,arp_recv->src_mac,6);
+  memmove(reply_arp->dst_ip,arp_recv->src_ip,4);
+  memmove(reply_arp->src_mac,mac_addr,6);
+  memmove(reply_arp->src_ip,my_ip,4);
 }
 
 void print_arp_info(struct arp_pkt* arp_p){

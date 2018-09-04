@@ -32,8 +32,8 @@ struct i8254_send_desc {
 #define I8254_DEVICE_ID 0x100E
 #define I8254_VENDOR_ID 0x8086
 
-#define I8254_RECV_DESC_NUM 16
-#define I8254_SEND_DESC_NUM 16
+#define I8254_RECV_DESC_NUM 128
+#define I8254_SEND_DESC_NUM 128
 
 #define I8254_CTRL_OFFSET 0x0
 #define I8254_CTRL_FD (1<<0)

@@ -19,10 +19,12 @@ int print_arp_table(struct arp_entry *arp_table);
 */
 void arp_init();
 void arp_broadcast();
-void arp_proc(uint buffer_addr);
+void arp_scan();
+int arp_proc(uint buffer_addr);
 void print_arp_info(struct arp_pkt* arp_p);
 void print_ipv4(uchar *ip);
 void print_mac(uchar *mac);
+void arp_reply_pkt_create(struct arp_pkt *arp_recv,uint send,uint *send_size);
 
 
 #define ARP_TABLE_MAX 64
