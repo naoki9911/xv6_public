@@ -25,8 +25,20 @@ struct __attribute__((packed)) arp_pkt {
   uchar dst_ip[6];
 };
 
+struct __attribute__((packed)) ipv4_pkt {
+  uchar ver;
+  uchar srv_type;
+  ushort total_len;
+  ushort id;
+  ushort fragment;
+  uchar src_ip[4];
+  uchar dst_ip[4];  
+  uchar option[3];
+  uchar padding;
+};
+
+
 #define ETH_TYPE_IPV4_HOST 0x0800
 #define ETH_TYPE_IPV4_NET 0x0008
 
-const static uchar my_ip[4] = {192,168,1,1};
 #endif

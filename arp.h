@@ -24,6 +24,9 @@ int arp_proc(uint buffer_addr);
 void print_arp_info(struct arp_pkt* arp_p);
 void print_ipv4(uchar *ip);
 void print_mac(uchar *mac);
+void arp_table_update(struct arp_pkt *recv_arp);
+int arp_table_search(uchar *ip);
+void print_arp_table();
 void arp_reply_pkt_create(struct arp_pkt *arp_recv,uint send,uint *send_size);
 
 

@@ -3,26 +3,34 @@
 #include "arp.h"
 #include "i8254.h"
 extern uchar mac_addr[6];
-/*
-int arp_proc(unsigned char *recv,size_t recv_size,unsigned char **send,size_t *send_size,struct arp_entry *arp_table){
-  struct arp_pkt *arp_p = (struct arp_pkt *)(recv + sizeof(struct eth_pkt));
+extern uchar my_ip[4];
+
+struct arp_entry arp_table[ARP_TABLE_MAX] = {0};
+
+int arp_proc(uint buffer_addr){
+  struct arp_pkt *arp_p = (struct arp_pkt *)(buffer_addr);
   if(arp_p->hrd_type != ARP_HARDWARE_TYPE) return -1;
   if(arp_p->pro_type != ARP_PROTOCOL_TYPE) return -1;
   if(arp_p->hrd_len != 6) return -1;
   if(arp_p->pro_len != 4) return -1;
   if(memcmp(my_ip,arp_p->dst_ip,4) != 0 && memcmp(my_ip,arp_p->src_ip,4) != 0) return -1;
-  print_arp_info(arp_p);
   if(arp_p->op == ARP_OPS_REQUEST && memcmp(my_ip,arp_p->dst_ip,4) == 0){
-    arp_reply_pkt_create(arp_p,send,send_size);
+    uint send = (uint)kalloc();
+    uint send_size=0;
+    arp_reply_pkt_create(arp_p,send,&send_size);
+    i8254_send(send,send_size);
+    kfree((char *)send);
+    cprintf("ARP REPLY\n");
     return ARP_CREATED_REPLY;
   }else if(arp_p->op == ARP_OPS_REPLY && memcmp(my_ip,arp_p->dst_ip,4) == 0){
-    arp_table_update(arp_table,arp_p);
+    cprintf("ARP TABLE UPDATED\n");
+    arp_table_update(arp_p);
     return ARP_UPDATED_TABLE;
   }else{
     return -1;
   }
 }
-*/
+
 void arp_scan(){
   uint send_size;
   for(int i=0;i<256;i++){
@@ -36,8 +44,9 @@ void arp_scan(){
     kfree((char *)send);
   }
 }
+
 void arp_broadcast(uint send,uint *send_size,uint ip){
-  uchar dst_ip[4] = {192,168,1,ip};
+  uchar dst_ip[4] = {10,0,1,ip};
   uchar dst_mac_eth[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
   uchar dst_mac_arp[6] = {0,0,0,0,0,0};
   
@@ -61,24 +70,22 @@ void arp_broadcast(uint send,uint *send_size,uint ip){
   memmove(reply_arp->src_mac,mac_addr,6);
   memmove(reply_arp->src_ip,my_ip,4);
 }
-/*
 
-
-int arp_table_update(struct arp_entry *arp_table,struct arp_pkt *recv_arp){
-  int index = arp_table_search(arp_table,recv_arp->src_ip);
+void arp_table_update(struct arp_pkt *recv_arp){
+  int index = arp_table_search(recv_arp->src_ip);
   if(index > -1){
-    memcpy(arp_table[index].mac,recv_arp->src_mac,6);
+    memmove(arp_table[index].mac,recv_arp->src_mac,6);
   }else{
     index += 1;
     index = -index;
-    memcpy(arp_table[index].mac,recv_arp->src_mac,6);
-    memcpy(arp_table[index].ip,recv_arp->src_ip,4);
+    memmove(arp_table[index].mac,recv_arp->src_mac,6);
+    memmove(arp_table[index].ip,recv_arp->src_ip,4);
     arp_table[index].use = 1;
   }
   print_arp_table(arp_table);
 }
 
-int arp_table_search(struct arp_entry *arp_table,uint8_t *ip){
+int arp_table_search(uchar *ip){
   int empty=1;
   for(int i=0;i<ARP_TABLE_MAX;i++){
     if(memcmp(arp_table[i].ip,ip,4) == 0){
@@ -91,47 +98,18 @@ int arp_table_search(struct arp_entry *arp_table,uint8_t *ip){
   return empty-1;
 }
 
-int arp_table_initialize(struct arp_entry *arp_table){
-  for(int i=0;i<ARP_TABLE_MAX;i++){
-    arp_table[i].use=0;
-  }
-}
-
-int print_arp_table(struct arp_entry *arp_table){
+void print_arp_table(){
   for(int i=0;i < ARP_TABLE_MAX;i++){
     if(arp_table[i].use != 0){
-      printf("Entry Num: %03d ",i);
+      cprintf("Entry Num: %d ",i);
       print_ipv4(arp_table[i].ip);
-      printf(" ");
+      cprintf(" ");
       print_mac(arp_table[i].mac);
-      printf("\n");
+      cprintf("\n");
     }
   }
 }
-*/
 
-int arp_proc(uint buffer_addr){
-  struct arp_pkt *arp_p = (struct arp_pkt *)(buffer_addr);
-  if(arp_p->hrd_type != ARP_HARDWARE_TYPE) return -1;
-  if(arp_p->pro_type != ARP_PROTOCOL_TYPE) return -1;
-  if(arp_p->hrd_len != 6) return -1;
-  if(arp_p->pro_len != 4) return -1;
-  if(memcmp(my_ip,arp_p->dst_ip,4) != 0 && memcmp(my_ip,arp_p->src_ip,4) != 0) return -1;
-  if(arp_p->op == ARP_OPS_REQUEST && memcmp(my_ip,arp_p->dst_ip,4) == 0){
-    uint send = (uint)kalloc();
-    uint send_size=0;
-    arp_reply_pkt_create(arp_p,send,&send_size);
-    i8254_send(send,send_size);
-    kfree((char *)send);
-    cprintf("ARP REPLY\n");
-    return ARP_CREATED_REPLY;
-  }else if(arp_p->op == ARP_OPS_REPLY && memcmp(my_ip,arp_p->dst_ip,4) == 0){
-  //  arp_table_update(arp_table,arp_p);
-    return ARP_UPDATED_TABLE;
-  }else{
-    return -1;
-  }
-}
 
 void arp_reply_pkt_create(struct arp_pkt *arp_recv,uint send,uint *send_size){
   *send_size = sizeof(struct eth_pkt) + sizeof(struct arp_pkt);

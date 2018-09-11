@@ -8,6 +8,7 @@
 
 uint base_addr;
 uchar mac_addr[6] = {0};
+uchar my_ip[4] = {10,0,1,10}; 
 uint *intr_addr;
 void i8254_init(struct pci_dev *dev){
   uint cmd_reg;
@@ -39,6 +40,11 @@ void i8254_init(struct pci_dev *dev){
   cprintf("INTR_ADDR:%x\n",intr_addr);
   i8254_init_recv();
   i8254_init_send();
+  cprintf("IP Address %d.%d.%d.%d\n",
+      my_ip[0],
+      my_ip[1],
+      my_ip[2],
+      my_ip[3]);
   *imc = 0x0;
 }
 
@@ -84,7 +90,7 @@ void i8254_init_recv(){
   *rxdctl = 0;
 
   uint *rctl = (uint *)(base_addr + 0x100);
-  *rctl = (I8254_RCTL_UPE | I8254_RCTL_MPE | I8254_RCTL_BAM | I8254_RCTL_BSIZE | I8254_RCTL_SECRC | I8254_RCTL_BSEX);
+  *rctl = (I8254_RCTL_UPE | I8254_RCTL_MPE | I8254_RCTL_BAM | I8254_RCTL_BSIZE | I8254_RCTL_SECRC);
 
   uint recv_desc_addr = (uint)kalloc();
   uint *rdbal = (uint *)(base_addr + 0x2800);
@@ -167,6 +173,7 @@ void i8254_init_send(){
 
   uint *tipg = (uint *)(base_addr + 0x410);
   *tipg = (10 | (10<<10) | (10<<20));
+  cprintf("E1000 Transmit Initialize Done\n");
 
 }
 uint i8254_read_eeprom(uint addr){
@@ -193,12 +200,14 @@ void i8254_recv(){
   struct i8254_recv_desc *recv_desc = (struct i8254_recv_desc *)(P2V(*rdbal));
   while(1){
     int rx_available = (I8254_RECV_DESC_NUM - *rdt + *rdh)%I8254_RECV_DESC_NUM;
-    while(rx_available > 0){
+    if(rx_available > 0){
       uint buffer_addr = P2V_WO(recv_desc[*rdt].buf_addr);
-      eth_proc(buffer_addr);
       *rdt = (*rdt + 1)%I8254_RECV_DESC_NUM;
+      eth_proc(buffer_addr);
     }
-    microdelay(1);
+    if(*rdt == *rdh) {
+      --(*rdt);
+    }
   }
 }
 
