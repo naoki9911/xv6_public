@@ -51,7 +51,7 @@ void icmp_reply_pkt_create(uint recv_addr,uint send_addr,uint *send_size){
   memmove(ipv4_send->src_ip,my_ip,4);
   memmove(ipv4_send->dst_ip,ipv4_recv->src_ip,4);
   ipv4_send->chk_sum = 0;
-  ipv4_send->chk_sum = ipv4_chksum((uint)ipv4_send);
+  ipv4_send->chk_sum = H2N_ushort(ipv4_chksum((uint)ipv4_send));
 
   icmp_send->type = ICMP_TYPE_ECHO_REPLY;
   icmp_send->code = 0;
