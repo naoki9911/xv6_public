@@ -206,7 +206,7 @@ void i8254_recv(){
       eth_proc(buffer_addr);
     }
     if(*rdt == *rdh) {
-      --(*rdt);
+      (*rdt)--;
     }
   }
 }

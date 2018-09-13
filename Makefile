@@ -35,6 +35,7 @@ OBJS = \
 	arp.o\
 	eth.o\
 	ipv4.o\
+	icmp.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf

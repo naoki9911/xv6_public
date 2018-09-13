@@ -20,7 +20,6 @@ int arp_proc(uint buffer_addr){
     arp_reply_pkt_create(arp_p,send,&send_size);
     i8254_send(send,send_size);
     kfree((char *)send);
-    cprintf("ARP REPLY\n");
     return ARP_CREATED_REPLY;
   }else if(arp_p->op == ARP_OPS_REPLY && memcmp(my_ip,arp_p->dst_ip,4) == 0){
     cprintf("ARP TABLE UPDATED\n");

@@ -31,12 +31,22 @@ struct __attribute__((packed)) ipv4_pkt {
   ushort total_len;
   ushort id;
   ushort fragment;
+  uchar ttl;
+  uchar protocol;
+  ushort chk_sum;
   uchar src_ip[4];
   uchar dst_ip[4];  
-  uchar option[3];
-  uchar padding;
 };
 
+struct __attribute__((packed)) icmp_echo_pkt {
+  uchar type;
+  uchar code;
+  ushort chk_sum;
+  ushort id;
+  ushort seq_num;
+  uchar time_stamp[8];
+  uchar data[48];
+};
 
 #define ETH_TYPE_IPV4_HOST 0x0800
 #define ETH_TYPE_IPV4_NET 0x0008

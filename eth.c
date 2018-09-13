@@ -10,8 +10,19 @@ void eth_proc(uint buffer_addr){
   if(eth_pkt->type[0] == 0x08 && eth_pkt->type[1] == 0x06){
     arp_proc(pkt_addr);
   }else if(eth_pkt->type[0] == 0x08 && eth_pkt->type[1] == 0x00){
-    ipv4_proc(pkt_addr);
+    ipv4_proc(buffer_addr);
   }else{
   }
 }
 
+ushort N2H_ushort(ushort value){
+  return (((value)&0xFF)<<8)+(value>>8);
+}
+
+ushort H2N_ushort(ushort value){
+  return (((value)&0xFF)<<8)+(value>>8);
+}
+
+uint H2N_uint(uint value){
+  return ((value&0xF)<<16)+((value&0xF0)<<8)+((value&0xF00)>>8)+((value&0xF000)>>16);
+}
