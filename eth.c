@@ -24,5 +24,9 @@ ushort H2N_ushort(ushort value){
 }
 
 uint H2N_uint(uint value){
-  return ((value&0xF)<<16)+((value&0xF0)<<8)+((value&0xF00)>>8)+((value&0xF000)>>16);
+  return ((value&0xF)<<24)+((value&0xF0)<<8)+((value&0xF00)>>8)+((value&0xF000)>>24);
+}
+
+uint N2H_uint(uint value){
+  return ((value&0xFF)<<24)+((value&0xFF00)<<8)+((value&0xFF0000)>>8)+((value&0xFF000000)>>24);
 }

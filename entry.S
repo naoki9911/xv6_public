@@ -67,7 +67,7 @@ entry:
   #Disable IA32e mode
   movl $0x0c0000080,%ecx
   rdmsr
-  btc $8,%eax
+  andl $0xFFFFFEFF,%eax
   wrmsr
 
   # Turn on page size extension for 4Mbyte pages

@@ -4,6 +4,7 @@
 #include "types.h"
 #include "icmp.h"
 #include "pkts_hdr.h"
+#include "tcp.h"
 
 extern uchar mac_addr[6];
 extern uchar my_ip[4];
@@ -12,11 +13,13 @@ int ip_id = -1;
 ushort send_id = 0;
 void ipv4_proc(uint buffer_addr){
   struct ipv4_pkt *ipv4_p = (struct ipv4_pkt *)(buffer_addr+14);
-    if(ip_id != ipv4_p->id){
+  if(ip_id != ipv4_p->id){
     ip_id = ipv4_p->id;
-    if(ipv4_p->protocol == IPV4_TYPE_ICMP){
-      icmp_proc(buffer_addr);
-    }
+      if(ipv4_p->protocol == IPV4_TYPE_ICMP){
+        icmp_proc(buffer_addr);
+      }else if(ipv4_p->protocol == IPV4_TYPE_TCP){
+        tcp_proc(buffer_addr);
+      }
   }
 }
 

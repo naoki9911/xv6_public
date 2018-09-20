@@ -16,7 +16,7 @@ void mpinit_uefi(void)
   struct boot_param *boot_param = (struct boot_param *)P2V_WO(BOOTPARAM);
   struct uefi_madt *madt = (struct uefi_madt*)(P2V_WO(boot_param->madt_addr));
 
-  uint i=0x2C;
+  uint i=sizeof(struct uefi_madt);
   struct uefi_lapic *lapic_entry;
   struct uefi_ioapic *ioapic;
   struct uefi_iso *iso;

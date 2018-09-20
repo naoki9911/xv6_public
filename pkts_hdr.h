@@ -48,6 +48,17 @@ struct __attribute__((packed)) icmp_echo_pkt {
   uchar data[48];
 };
 
+struct __attribute__((packed)) tcp_pkt {
+  ushort src_port;
+  ushort dst_port;
+  uint seq_num;
+  uint ack_num;
+  uchar code_bits[2];
+  ushort window;
+  ushort chk_sum;
+  ushort urgent_ptr;
+};
+
 #define ETH_TYPE_IPV4_HOST 0x0800
 #define ETH_TYPE_IPV4_NET 0x0008
 
