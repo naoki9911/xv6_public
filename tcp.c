@@ -5,22 +5,41 @@
 #include "defs.h"
 #include "i8254.h"
 
-uint ack_num = 0;
 uint seq_num = 0;
 extern ushort send_id;
 extern uchar mac_addr[6];
 extern uchar my_ip[4];
-
 void tcp_proc(uint buffer_addr){
-//  struct eth_pkt *eth_p = (struct eth_pkt *)(buffer_addr);
-  struct ipv4_pkt *ipv4_p = (struct ipv4_pkt *)(buffer_addr+sizeof(struct eth_pkt));
+  struct ipv4_pkt *ipv4_p = (struct ipv4_pkt *)(buffer_addr + sizeof(struct eth_pkt));
   struct tcp_pkt *tcp_p = (struct tcp_pkt *)((uint)ipv4_p + (ipv4_p->ver&0xF)*4);
-  cprintf("SRC PORT:%d DST PROT:%d\n",N2H_ushort(tcp_p->src_port),N2H_ushort(tcp_p->dst_port));
-  cprintf("SEQ_NUM:%x ACK_NUM:%d WINDOWS:%d\n",N2H_uint(tcp_p->seq_num),N2H_uint(tcp_p->ack_num),N2H_ushort(tcp_p->window));
+  char *payload = (char *)((uint)tcp_p + 20);
   uint send_addr = (uint)kalloc();
   uint send_size = 0;
-  tcp_pkt_create(buffer_addr,send_addr,&send_size,TCP_CODEBITS_ACK | TCP_CODEBITS_SYN,0);
-  i8254_send(send_addr,send_size);
+  if(tcp_p->code_bits[1]&TCP_CODEBITS_SYN){
+    tcp_pkt_create(buffer_addr,send_addr,&send_size,TCP_CODEBITS_ACK | TCP_CODEBITS_SYN,0);
+    i8254_send(send_addr,send_size);
+    seq_num++;
+  }else if(tcp_p->code_bits[1] == (TCP_CODEBITS_PSH | TCP_CODEBITS_ACK)){
+    cprintf("ACK PSH\n");
+    if(memcmp(payload,"GET",3)){
+      char *send_payload = (char *)(send_addr + sizeof(struct eth_pkt) + sizeof(struct ipv4_pkt) 
+          + sizeof(struct tcp_pkt));
+      memmove(send_payload,"200 OK",6);
+      cprintf("GET\n");
+      tcp_pkt_create(buffer_addr,send_addr,&send_size,(TCP_CODEBITS_PSH|TCP_CODEBITS_ACK),6);
+    }else{
+      tcp_pkt_create(buffer_addr,send_addr,&send_size,TCP_CODEBITS_ACK,0);
+      i8254_send(send_addr,send_size);
+      char *send_payload = (char *)(send_addr + sizeof(struct eth_pkt) + sizeof(struct ipv4_pkt) 
+          + sizeof(struct tcp_pkt));
+      memmove(send_payload,"HTTP/1.0 404 Not Found\r\nDate: Fri, 21 Sep 2018 09:38:11 GMT\r\nContent-Type: text/html; charset=iso-8859-1\r\n<html><head>\r\n<title>404 Not Found</title>\r\n</head><body>\r\n<h1>Not Found</h1>\r\n</body></html>",200);
+      tcp_pkt_create(buffer_addr,send_addr,&send_size,(TCP_CODEBITS_ACK|TCP_CODEBITS_PSH),200);
+    }
+    i8254_send(send_addr,send_size);
+    seq_num++;
+  }else{
+    tcp_pkt_create(buffer_addr,send_addr,&send_size,TCP_CODEBITS_ACK,0);
+  }
   kfree((char *)send_addr);
 }
 
@@ -56,7 +75,7 @@ void tcp_pkt_create(uint recv_addr,uint send_addr,uint *send_size,uint pkt_type,
 
   tcp_send->src_port = tcp_recv->dst_port;
   tcp_send->dst_port = tcp_recv->src_port;
-  tcp_send->seq_num = seq_num;
+  tcp_send->seq_num = H2N_uint(seq_num);
   tcp_send->ack_num = tcp_recv->seq_num + (1<<(8*3));
 
   tcp_send->code_bits[0] = 0;
@@ -64,7 +83,7 @@ void tcp_pkt_create(uint recv_addr,uint send_addr,uint *send_size,uint pkt_type,
   tcp_send->code_bits[0] = 5<<4;
   tcp_send->code_bits[1] = pkt_type;
 
-  tcp_send->window = H2N_ushort(1);
+  tcp_send->window = H2N_ushort(14480);
   tcp_send->urgent_ptr = 0;
   tcp_send->chk_sum = 0;
 

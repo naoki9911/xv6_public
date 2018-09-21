@@ -189,7 +189,6 @@ uint i8254_read_eeprom(uint addr){
 
   return (*eerd >> 16) & 0xFFFF;
 }
-
 void i8254_recv(){
   uint *rdh = (uint *)(base_addr + 0x2810);
   uint *rdt = (uint *)(base_addr + 0x2818);

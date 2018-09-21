@@ -13,7 +13,7 @@ int ip_id = -1;
 ushort send_id = 0;
 void ipv4_proc(uint buffer_addr){
   struct ipv4_pkt *ipv4_p = (struct ipv4_pkt *)(buffer_addr+14);
-  if(ip_id != ipv4_p->id){
+  if(ip_id != ipv4_p->id && memcmp(my_ip,ipv4_p->src_ip,4) != 0){
     ip_id = ipv4_p->id;
       if(ipv4_p->protocol == IPV4_TYPE_ICMP){
         icmp_proc(buffer_addr);
