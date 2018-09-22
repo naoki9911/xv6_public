@@ -4,11 +4,13 @@
 #include "pkts_hdr.h"
 #include "defs.h"
 #include "i8254.h"
+#include "http.h"
 
 uint seq_num = 0;
 extern ushort send_id;
 extern uchar mac_addr[6];
 extern uchar my_ip[4];
+
 void tcp_proc(uint buffer_addr){
   struct ipv4_pkt *ipv4_p = (struct ipv4_pkt *)(buffer_addr + sizeof(struct eth_pkt));
   struct tcp_pkt *tcp_p = (struct tcp_pkt *)((uint)ipv4_p + (ipv4_p->ver&0xF)*4);
@@ -22,18 +24,19 @@ void tcp_proc(uint buffer_addr){
   }else if(tcp_p->code_bits[1] == (TCP_CODEBITS_PSH | TCP_CODEBITS_ACK)){
     cprintf("ACK PSH\n");
     if(memcmp(payload,"GET",3)){
-      char *send_payload = (char *)(send_addr + sizeof(struct eth_pkt) + sizeof(struct ipv4_pkt) 
-          + sizeof(struct tcp_pkt));
-      memmove(send_payload,"200 OK",6);
-      cprintf("GET\n");
-      tcp_pkt_create(buffer_addr,send_addr,&send_size,(TCP_CODEBITS_PSH|TCP_CODEBITS_ACK),6);
+     tcp_pkt_create(buffer_addr,send_addr,&send_size,TCP_CODEBITS_ACK,0);
+     i8254_send(send_addr,send_size);
+      uint send_payload = (send_addr + sizeof(struct eth_pkt) + sizeof(struct ipv4_pkt) + sizeof(struct tcp_pkt));
+      uint payload_size;
+      http_proc(0,0,send_payload,&payload_size);
+      tcp_pkt_create(buffer_addr,send_addr,&send_size,(TCP_CODEBITS_ACK|TCP_CODEBITS_PSH),payload_size);
     }else{
-      tcp_pkt_create(buffer_addr,send_addr,&send_size,TCP_CODEBITS_ACK,0);
-      i8254_send(send_addr,send_size);
-      char *send_payload = (char *)(send_addr + sizeof(struct eth_pkt) + sizeof(struct ipv4_pkt) 
-          + sizeof(struct tcp_pkt));
-      memmove(send_payload,"HTTP/1.0 404 Not Found\r\nDate: Fri, 21 Sep 2018 09:38:11 GMT\r\nContent-Type: text/html; charset=iso-8859-1\r\n<html><head>\r\n<title>404 Not Found</title>\r\n</head><body>\r\n<h1>Not Found</h1>\r\n</body></html>",200);
-      tcp_pkt_create(buffer_addr,send_addr,&send_size,(TCP_CODEBITS_ACK|TCP_CODEBITS_PSH),200);
+     tcp_pkt_create(buffer_addr,send_addr,&send_size,TCP_CODEBITS_ACK,0);
+     i8254_send(send_addr,send_size);
+      uint send_payload = (send_addr + sizeof(struct eth_pkt) + sizeof(struct ipv4_pkt) + sizeof(struct tcp_pkt));
+      uint payload_size;
+      http_proc(0,0,send_payload,&payload_size);
+      tcp_pkt_create(buffer_addr,send_addr,&send_size,(TCP_CODEBITS_ACK|TCP_CODEBITS_PSH),payload_size);
     }
     i8254_send(send_addr,send_size);
     seq_num++;
