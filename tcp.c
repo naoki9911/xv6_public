@@ -10,6 +10,7 @@ uint seq_num = 0;
 extern ushort send_id;
 extern uchar mac_addr[6];
 extern uchar my_ip[4];
+int fin_flag = 0;
 
 void tcp_proc(uint buffer_addr){
   struct ipv4_pkt *ipv4_p = (struct ipv4_pkt *)(buffer_addr + sizeof(struct eth_pkt));
@@ -22,10 +23,10 @@ void tcp_proc(uint buffer_addr){
     i8254_send(send_addr,send_size);
     seq_num++;
   }else if(tcp_p->code_bits[1] == (TCP_CODEBITS_PSH | TCP_CODEBITS_ACK)){
-    cprintf("ACK PSH\n");
     if(memcmp(payload,"GET",3)){
-     tcp_pkt_create(buffer_addr,send_addr,&send_size,TCP_CODEBITS_ACK,0);
-     i8254_send(send_addr,send_size);
+      cprintf("ACK PSH\n");
+      tcp_pkt_create(buffer_addr,send_addr,&send_size,TCP_CODEBITS_ACK,0);
+      i8254_send(send_addr,send_size);
       uint send_payload = (send_addr + sizeof(struct eth_pkt) + sizeof(struct ipv4_pkt) + sizeof(struct tcp_pkt));
       uint payload_size;
       http_proc(0,0,send_payload,&payload_size);
@@ -40,8 +41,12 @@ void tcp_proc(uint buffer_addr){
     }
     i8254_send(send_addr,send_size);
     seq_num++;
-  }else{
-    tcp_pkt_create(buffer_addr,send_addr,&send_size,TCP_CODEBITS_ACK,0);
+  }else if(tcp_p->code_bits[1] == TCP_CODEBITS_ACK){
+    if(fin_flag == 1){
+      tcp_pkt_create(buffer_addr,send_addr,&send_size,TCP_CODEBITS_FIN,0);
+      i8254_send(send_addr,send_size);
+      fin_flag = 0;
+    }
   }
   kfree((char *)send_addr);
 }
@@ -117,4 +122,8 @@ ushort tcp_chksum(uint tcp_addr){
   }
   chk_sum += (chk_sum>>8*2);
   return ~(chk_sum);
+}
+
+void tcp_fin(){
+  fin_flag =1;
 }

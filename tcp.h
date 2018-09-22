@@ -5,6 +5,7 @@
 void tcp_proc(uint buffer_addr);
 void tcp_pkt_create(uint recv_addr,uint send_addr,uint *send_size,uint pkt_type,uint payload_size);
 ushort tcp_chksum(uint tcp_addr);
+void tcp_fin();
 
 struct __attribute__((packed)) tcp_dummy {
   uchar src_ip[4];
